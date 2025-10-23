@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 
 export default function LoginUser() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [, setUser] = useState<{ name: string } | null>(null);
   const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     email: "",
