@@ -19,13 +19,28 @@ interface Movie {
   image: string;
 }
 
+
 export default function TaskIndex() {
   const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const moviesPerPage = 8; // số phim mỗi trang
+
   const [user, setUser] = useState<{ name: string } | null>(null); // user info
   const [showSubMenu, setShowSubMenu] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Lấy index đầu & cuối
+  const indexOfLastMovie = currentPage * moviesPerPage;
+  const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
+  const currentMovies = movies.slice(indexOfFirstMovie, indexOfLastMovie);
+
+  // Tổng số trang
+  const totalPages = Math.ceil(movies.length / moviesPerPage);
+
+  // Hàm chuyển trang
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
 
   // Ảnh carousel
@@ -218,7 +233,7 @@ export default function TaskIndex() {
                     Xin chào, <b className="text-black">{user.name}</b>
                   </div>
 
-                  
+
 
                   {/* Nút Đăng xuất */}
                   <button
@@ -322,7 +337,7 @@ export default function TaskIndex() {
         </h1>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-          {movies.map((movie) => (
+          {currentMovies.map((movie) => (
             <div
               key={movie.id}
               className="relative bg-gray-800/90 border border-white/10 rounded-2xl shadow-lg overflow-hidden group transform hover:scale-105 hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all duration-300"
@@ -375,6 +390,99 @@ export default function TaskIndex() {
             </div>
           ))}
         </section>
+
+        {/* Pagination controls */}
+        <div className="flex justify-center mt-10">
+          <nav className="flex items-center space-x-2">
+            {/* Nút Trước */}
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${currentPage === 1
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-yellow-500 text-black hover:bg-yellow-400"
+                }`}
+            >
+              ⬅ Trước
+            </button>
+
+            {/* Số trang hiển thị tối đa 10 */}
+            {(() => {
+              const maxPagesToShow = 10;
+              let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+              let endPage = startPage + maxPagesToShow - 1;
+
+              if (endPage > totalPages) {
+                endPage = totalPages;
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+              }
+
+              const pages = [];
+              for (let i = startPage; i <= endPage; i++) {
+                pages.push(
+                  <button
+                    key={i}
+                    onClick={() => paginate(i)}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${currentPage === i
+                        ? "bg-red-600 text-white shadow-md"
+                        : "bg-gray-700 text-gray-300 hover:bg-yellow-400 hover:text-black"
+                      }`}
+                  >
+                    {i}
+                  </button>
+                );
+              }
+
+              return (
+                <>
+                  {/* Hiện dấu ... nếu còn trang trước */}
+                  {startPage > 1 && (
+                    <>
+                      <button
+                        onClick={() => paginate(1)}
+                        className="px-3 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-yellow-400 hover:text-black"
+                      >
+                        1
+                      </button>
+                      <span className="px-2 text-gray-400 select-none">...</span>
+                    </>
+                  )}
+
+                  {pages}
+
+                  {/* Hiện dấu ... nếu còn trang sau */}
+                  {endPage < totalPages && (
+                    <>
+                      <span className="px-2 text-gray-400 select-none">...</span>
+                      <button
+                        onClick={() => paginate(totalPages)}
+                        className="px-3 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-yellow-400 hover:text-black"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* Nút Sau */}
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${currentPage === totalPages
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-yellow-500 text-black hover:bg-yellow-400"
+                }`}
+            >
+              Sau ➡
+            </button>
+          </nav>
+        </div>
+
+
+
+
       </div>
       {/*Tin mới nhất */}
       <section className=" flex justify-center  bg-gradient-to-br from-black via-gray-900 to-black ">
