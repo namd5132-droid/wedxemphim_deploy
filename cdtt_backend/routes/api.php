@@ -9,6 +9,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShowtimeController;
 use App\Http\Controllers\ContactController;
 
+Route::get('/contact', [ContactController::class, 'index']); 
+
 Route::post('/contact', [ContactController::class, 'store']);
 
 
@@ -45,6 +47,5 @@ Route::post('/movies', [MovieController::class, 'store']); // thêm
 Route::get('/movies/{id}', [MovieController::class, 'show']); // chi tiết
 Route::put('/movies/{id}', [MovieController::class, 'update']); // sửa
 Route::delete('/movies/{id}', [MovieController::class, 'destroy']); // xóa
-
 
 

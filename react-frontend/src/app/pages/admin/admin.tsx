@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import apiClient from "../../../constants/api"; // axios instance
 
-type ActiveTab = "home" | "manage" | "tickets";
+type ActiveTab = "home" | "manage" | "tickets" | "feedback";
 type ManageTab = "add" | "edit" | "delete" | "showtime";
 
 interface Movie {
@@ -15,6 +15,16 @@ interface Movie {
   image: string;
   description: string;
 }
+
+interface Feedback {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  created_at: string;
+}
+
 
 interface MovieForm {
   title: string;
@@ -34,6 +44,14 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   // Thêm ở đầu component
   const [editingShowtime, setEditingShowtime] = useState<Showtime | null>(null);
+
+
+
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+
+
+
+
 
 
   const [formData, setFormData] = useState<MovieForm>({
@@ -90,6 +108,7 @@ export default function AdminDashboard() {
     fetchMovies();
     fetchOrders();
     fetchShowtimes();
+    fetchFeedbacks();
   }, []);
 
   const fetchMovies = async () => {
@@ -109,6 +128,16 @@ export default function AdminDashboard() {
       console.error("Lỗi load vé:", err);
     }
   };
+
+   const fetchFeedbacks = async () => {
+  try {
+    const res = await apiClient.get("/contact");
+    console.log("📥 Feedback data:", res.data);
+    setFeedbacks(res.data);
+  } catch (err) {
+    console.error("Lỗi load phản hồi:", err);
+  }
+};
 
   // ================== ADD / EDIT / DELETE MOVIE ==================
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -218,7 +247,7 @@ export default function AdminDashboard() {
           🎬 CGV Admin
         </h1>
         <ul className="flex gap-6 font-medium text-lg">
-          {["home", "manage", "tickets"].map((tab) => (
+          {["home", "manage", "tickets", "feedback"].map((tab) => (
             <li
               key={tab}
               onClick={() => setActiveTab(tab as ActiveTab)}
@@ -231,10 +260,13 @@ export default function AdminDashboard() {
                 ? "Trang chủ"
                 : tab === "manage"
                   ? "Quản lý"
-                  : "Danh sách khách hàng"}
+                  : tab === "tickets"
+                    ? "Danh sách khách hàng"
+                    : "Phản hồi"}
             </li>
           ))}
         </ul>
+
       </nav>
 
       {/* Content */}
@@ -626,6 +658,46 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
+
+        {activeTab === "feedback" && (
+          <div>
+            <h2 className="text-3xl font-bold text-center text-red-500 mb-8">
+              💬 Phản hồi người dùng
+            </h2>
+
+            {feedbacks.length === 0 ? (
+              <p className="text-gray-400 text-center">Chưa có phản hồi nào</p>
+            ) : (
+              <div className="overflow-x-auto bg-gray-900 rounded-lg shadow-lg">
+                <table className="w-full border-collapse">
+                  <thead className="bg-gray-800 text-yellow-400">
+                    <tr>
+                      <th className="p-3 text-left">ID</th>
+                      <th className="p-3 text-left">Họ tên</th>
+                      <th className="p-3 text-left">Email</th>
+                      <th className="p-3 text-left">Số điện thoại</th>
+                      <th className="p-3 text-left">Nội dung</th>
+                      <th className="p-3 text-left">Ngày gửi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {feedbacks.map((fb) => (
+                      <tr key={fb.id} className="border-t border-gray-700 hover:bg-gray-800">
+                        <td className="p-3">{fb.id}</td>
+                        <td className="p-3 font-semibold">{fb.name}</td>
+                        <td className="p-3">{fb.email}</td>
+                        <td className="p-3">{fb.phone}</td>
+                        <td className="p-3 max-w-[300px] truncate text-gray-300">{fb.message}</td>
+                        <td className="p-3">{new Date(fb.created_at).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
 
       </div>
     </div>

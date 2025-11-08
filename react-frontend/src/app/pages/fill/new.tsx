@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import muado from "../../../assets/img/muado.jpg";
 import { Link, useNavigate } from "react-router-dom";
 import apiClient from "../../../constants/api";
@@ -19,58 +19,96 @@ interface Movie {
 }
 
 export default function fill() {
-  const navigate = useNavigate();
+ const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [user, setUser] = useState<{ name: string } | null>(null); // user info
   const [showSubMenu, setShowSubMenu] = useState(false);
+  const [openMenu, setOpenMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
 
-    // Ảnh carousel
-const carouselImages = [
-  {
-    src: crs1,
-    title: "🎬 Bom tấn tháng 10 đã đổ bộ!",
-    subtitle: "Trải nghiệm rạp phim chuẩn Galaxy ngay tại nhà!",
-  },
-  {
-    src: crs2,
-    title: "🔥 Ưu đãi vé chỉ từ 45K!",
-    subtitle: "Mua vé online – Giảm giá cực sốc!",
-  },
-  {
-    src: crs3,
-    title: "💥 Phim Marvel trở lại!",
-    subtitle: "Đặt vé sớm để chọn ghế đẹp nhất!",
-  },
-  {
-    src:crs4,
-    title: "🎁 Nhận quà hấp dẫn khi xem phim cuối tuần!",
-    subtitle: "Đừng bỏ lỡ cơ hội nhận vé miễn phí và combo bắp nước!",
-  },
-  {
-    src:crs5,
-    title: "🌃 Thế giới điện ảnh trong tầm tay bạn",
-    subtitle: "Chọn phim yêu thích – Xem ngay hôm nay!",
-  },
-];
+  // Ảnh carousel
+  const carouselImages = [
+    {
+      src: crs1,
+      title: "🎬 Bom tấn tháng 10 đã đổ bộ!",
+      subtitle: "Trải nghiệm rạp phim chuẩn Galaxy ngay tại nhà!",
+    },
+    {
+      src: crs2,
+      title: "🔥 Ưu đãi vé chỉ từ 45K!",
+      subtitle: "Mua vé online – Giảm giá cực sốc!",
+    },
+    {
+      src: crs3,
+      title: "💥 Phim Marvel trở lại!",
+      subtitle: "Đặt vé sớm để chọn ghế đẹp nhất!",
+    },
+    {
+      src: crs4,
+      title: "🎁 Nhận quà hấp dẫn khi xem phim cuối tuần!",
+      subtitle: "Đừng bỏ lỡ cơ hội nhận vé miễn phí và combo bắp nước!",
+    },
+    {
+      src: crs5,
+      title: "🌃 Thế giới điện ảnh trong tầm tay bạn",
+      subtitle: "Chọn phim yêu thích – Xem ngay hôm nay!",
+    },
+  ];
 
-const [currentIndex, setCurrentIndex] = useState(0);
 
-const nextSlide = () => {
-  setCurrentIndex((prev) => (prev + 1) % carouselImages.length);
-};
+  const handleBookingClick = () => {
+    if (user) {
+      navigate("/booking"); // ✅ Nếu đã login
+    } else {
+      alert("⚠️ Vui lòng đăng nhập để đặt vé!");
+      navigate("/users/login"); // ❌ Chưa login → về login
+    }
+  };
+  const handleCartClick = () => {
+    if (user) {
+      navigate("/cart"); // ✅ Có user thì cho vào giỏ hàng
+    } else {
+      alert("⚠️ Vui lòng đăng nhập để vào giỏ hàng!");
+      navigate("/users/login"); // ❌ Chưa login thì về login
+    }
+  };
 
-const prevSlide = () => {
-  setCurrentIndex((prev) =>
-    prev === 0 ? carouselImages.length - 1 : prev - 1
-  );
-};
+  // Đóng menu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-// Tự động chuyển slide
-useEffect(() => {
-  const interval = setInterval(nextSlide, 4000); // đổi sau 4s
-  return () => clearInterval(interval);
-}, []);
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % carouselImages.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) =>
+      prev === 0 ? carouselImages.length - 1 : prev - 1
+    );
+  };
+  useEffect(() => {
+    // ✅ Check user login (lấy từ localStorage nếu có)
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+
+  // Tự động chuyển slide
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 4000); // đổi sau 4s
+    return () => clearInterval(interval);
+  }, []);
 
 
   useEffect(() => {
@@ -79,30 +117,30 @@ useEffect(() => {
   }, []);
   // Lấy tên người dùng từ localStorage khi load trang
   useEffect(() => {
-  const storedName = localStorage.getItem("userName");
-  console.log("Tên người dùng từ localStorage:", storedName); // debug
-  if (storedName && storedName !== "undefined" && storedName.trim() !== "") {
-    setUser({ name: storedName });
-  }
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      setUser({ name: parsed.name });
+    }
 
 
-  apiClient
-    .get("movies")
-    .then((res: { data: Movie[] }) => setMovies(res.data))
-    .catch((err: unknown) => console.error("Lỗi tải phim:", err));
-}, []);
+    apiClient
+      .get("movies")
+      .then((res: { data: Movie[] }) => setMovies(res.data))
+      .catch((err: unknown) => console.error("Lỗi tải phim:", err));
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userName");
+    localStorage.removeItem("user");
     setUser(null);
     navigate("/users/login");
   };
 
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
-        <header className="fixed top-0 left-0 w-full z-50 bg-black text-white px-6 py-4 flex justify-between items-center shadow-lg">
+         <header className="fixed top-0 left-0 w-full z-50 bg-black text-white px-6 py-4 flex justify-between items-center shadow-lg">
         <h1 className="text-2xl font-bold">🎬 Movie Booking</h1>
 
         {/* Menu */}
@@ -132,9 +170,12 @@ useEffect(() => {
                 </li>
               </ul>
             </li>
-            <Link to="/booking">
-              <li className="hover:text-yellow-400 cursor-pointer">Lịch chiếu</li>
-            </Link>
+            <li
+              onClick={handleBookingClick}
+              className="hover:text-yellow-400 cursor-pointer"
+            >
+              Đặt vé
+            </li>
             <Link to="/contact">
               <li className="hover:text-yellow-400 cursor-pointer">Liên hệ</li>
             </Link>
@@ -145,37 +186,54 @@ useEffect(() => {
         <div className="flex items-center gap-4">
           {/* Search button */}
           <Link to="/search">
-            <button className="relative bg-yellow-500 p-3 rounded-full text-black hover:bg-yellow-400 transition transform hover:scale-110 shadow-lg">
+            <button className="w-10 h-10 flex items-center justify-center bg-yellow-500 rounded-full text-black hover:bg-yellow-400 transition transform hover:scale-110 shadow-lg">
               🔍
             </button>
           </Link>
 
           {/* Cart button */}
-          <Link to="/cart" className="relative">
-            <button className="relative bg-yellow-500 p-3 rounded-full text-black hover:bg-yellow-400 transition transform hover:scale-110 shadow-lg">
-              🛒
-            </button>
-          </Link>
+          <button
+            onClick={handleCartClick}
+            className="w-10 h-10 flex items-center justify-center bg-yellow-500 rounded-full text-black hover:bg-yellow-400 transition transform hover:scale-110 shadow-lg"
+          >
+            🛒
+          </button>
 
-          {/* User */}
+          {/* Nếu đã đăng nhập */}
           {user ? (
-            <div className="flex items-center space-x-3">
+            <div ref={menuRef} className="relative">
               {/* Avatar */}
-              <div className="w-8 h-8 bg-sky-200 rounded-full flex items-center justify-center text-gray-700 font-bold">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <span>{user.name}</span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-400 hover:text-sky-500"
+              <div
+                onClick={() => setOpenMenu(!openMenu)}
+                className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-500 text-black rounded-full font-bold cursor-pointer hover:scale-110 hover:shadow-lg transition-all duration-300"
               >
-                Logout
-              </button>
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </div>
+
+              {/* Dropdown menu */}
+              {openMenu && (
+                <div className="absolute right-0 mt-3 w-56 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 animate-fadeIn z-50">
+                  <div className="px-4 py-3 border-b text-sm text-gray-600">
+                    Xin chào, <b className="text-black">{user.name}</b>
+                  </div>
+
+                  
+
+                  {/* Nút Đăng xuất */}
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-500 transition"
+                  >
+                    🚪 Đăng xuất
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
+            // Nếu chưa đăng nhập
             <Link
               to="/users/login"
-              className="flex items-center space-x-1 hover:text-sky-400"
+              className="flex items-center space-x-1 hover:text-yellow-400 transition"
             >
               <svg
                 className="w-6 h-6"
@@ -193,7 +251,9 @@ useEffect(() => {
               <span>Đăng nhập</span>
             </Link>
           )}
+
         </div>
+
       </header>
 
            {/* Hero Section - Carousel (Galaxy Style) */}

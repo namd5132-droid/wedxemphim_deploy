@@ -1,28 +1,29 @@
-# ----- Stage 1: Build -----
-FROM composer:2 AS build
+# ====== Build Stage ======
+FROM composer:2.6 AS build
 WORKDIR /app
-
-# Copy toàn bộ mã nguồn vào container
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader
 COPY . .
 
-# Cài đặt dependencies của Laravel
-RUN composer install --no-dev --optimize-autoloader
+# ====== Run Stage ======
+FROM php:8.2-fpm
 
-# ----- Stage 2: Run -----
-FROM php:8.2-cli
+# Cài extension cần thiết cho Laravel
+RUN apt-get update && apt-get install -y \
+    git zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev curl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Cài đặt extension cần thiết cho Laravel (cho MySQL)
-RUN docker-php-ext-install pdo pdo_mysql
+# Cài Composer
+COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
-# Sao chép ứng dụng đã build
-WORKDIR /app
-COPY --from=build /app /app
+WORKDIR /var/www/html
+COPY --from=build /app ./
 
-# Tạo APP_KEY
-RUN php artisan key:generate --force || true
+# Phân quyền cho Laravel
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Render tự cấp PORT qua biến môi trường
-ENV PORT=10000
+# Expose port 8000 (Render mặc định dùng PORT env)
+EXPOSE 8000
 
-# Chạy server Laravel
+# Start Laravel app
 CMD php artisan serve --host=0.0.0.0 --port=$PORT

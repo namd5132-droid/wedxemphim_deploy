@@ -14,7 +14,7 @@ export default function Contact() {
     setErrorMsg("");
 
     try {
-      await axios.post("http://127.0.0.1:8001/api/contact", form);
+      await axios.post("http://127.0.0.1:8000/api/contact", form);
       setSuccess(true);
     } catch (err) {
       console.error(err);

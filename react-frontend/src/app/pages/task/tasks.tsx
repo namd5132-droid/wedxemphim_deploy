@@ -218,13 +218,7 @@ export default function TaskIndex() {
                     Xin chào, <b className="text-black">{user.name}</b>
                   </div>
 
-                  {/* ✅ Nút Trang Admin */}
-                  <Link
-                    to="/admin"
-                    className="block w-full text-left px-4 py-2 hover:bg-yellow-50 text-yellow-600 transition"
-                  >
-                    ⚙️ Trang Admin
-                  </Link>
+                  
 
                   {/* Nút Đăng xuất */}
                   <button
